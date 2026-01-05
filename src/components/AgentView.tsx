@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
 import './AgentView.css'
 
 interface AgentUpdate {
   agent: string
   stage?: number
+  iteration?: number
   status: 'thinking' | 'complete' | 'error'
   message?: string
   response?: string
@@ -12,7 +12,7 @@ interface AgentUpdate {
 
 interface AgentViewProps {
   updates: AgentUpdate[]
-  isActive: boolean
+  isActive?: boolean
 }
 
 const agentConfig = {
@@ -42,7 +42,7 @@ const agentConfig = {
   }
 }
 
-function AgentView({ updates, isActive }: AgentViewProps) {
+function AgentView({ updates }: AgentViewProps) {
   const agents = ['analysis', 'research', 'critic', 'monitor']
   
   // Get the latest update for each agent (by iteration, then by status)

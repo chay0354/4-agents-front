@@ -6,6 +6,8 @@ import './App.css'
 
 interface AgentUpdate {
   agent: string
+  stage?: number
+  iteration?: number
   status: 'thinking' | 'complete' | 'error'
   message?: string
   response?: string
@@ -15,7 +17,6 @@ interface AgentUpdate {
 function App() {
   const [agentUpdates, setAgentUpdates] = useState<AgentUpdate[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
 
   const handleAnalyze = async (problem: string) => {
     setIsLoading(true)
@@ -74,7 +75,6 @@ function App() {
               })
 
               if (data.done) {
-                setIsComplete(true)
                 setIsLoading(false)
               }
             } catch (e) {
