@@ -20,7 +20,6 @@ function App() {
 
   const handleAnalyze = async (problem: string) => {
     setIsLoading(true)
-    setIsComplete(false)
     setAgentUpdates([])
 
     try {
