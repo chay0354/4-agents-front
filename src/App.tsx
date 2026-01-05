@@ -20,7 +20,14 @@ function App() {
 
   const handleAnalyze = async (problem: string) => {
     setIsLoading(true)
-    setAgentUpdates([])
+    // Show immediate loading state for analysis agent
+    setAgentUpdates([{
+      agent: 'analysis',
+      stage: 1,
+      iteration: 1,
+      status: 'thinking',
+      message: 'Starting analysis...'
+    }])
 
     try {
       let backUrl = import.meta.env.VITE_BACK_URL || 'http://127.0.0.1:8000'
@@ -63,8 +70,12 @@ function App() {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6))
+              // Skip system messages, they're just for initialization
+              if (data.agent === 'system') {
+                continue
+              }
               setAgentUpdates(prev => {
-                const existing = prev.findIndex(u => u.agent === data.agent)
+                const existing = prev.findIndex(u => u.agent === data.agent && (u.stage === data.stage || (!u.stage && !data.stage)))
                 if (existing >= 0) {
                   const updated = [...prev]
                   updated[existing] = data
