@@ -1,0 +1,216 @@
+import { useState, useEffect } from 'react'
+import './AgentView.css'
+
+interface AgentUpdate {
+  agent: string
+  stage?: number
+  status: 'thinking' | 'complete' | 'error'
+  message?: string
+  response?: string
+  done?: boolean
+}
+
+interface AgentViewProps {
+  updates: AgentUpdate[]
+  isActive: boolean
+}
+
+const agentConfig = {
+  analysis: {
+    name: 'Analysis Agent',
+    icon: '🔍',
+    color: '#6366f1',
+    description: 'Understanding the problem, breaking it down into sub-problems, and building a thinking plan'
+  },
+  research: {
+    name: 'Research Agent',
+    icon: '📚',
+    color: '#10b981',
+    description: 'Gathering relevant knowledge, existing information, professional assumptions, and theoretical insights'
+  },
+  critic: {
+    name: 'Critic Agent',
+    icon: '⚖️',
+    color: '#ef4444',
+    description: 'Critically evaluating the solution, identifying weaknesses, contradictions, false assumptions, and risks'
+  },
+  monitor: {
+    name: 'Monitor Agent',
+    icon: '👁️',
+    color: '#3b82f6',
+    description: 'Supervising the thinking process, identifying loops or deviations, deciding if another iteration is needed'
+  }
+}
+
+function AgentView({ updates, isActive }: AgentViewProps) {
+  const agents = ['analysis', 'research', 'critic', 'monitor']
+  
+  // Get the latest update for each agent (by iteration, then by status)
+  const agentStates: Record<string, AgentUpdate> = {}
+  
+  updates.forEach(update => {
+    if (agents.includes(update.agent)) {
+      const existing = agentStates[update.agent]
+      if (!existing) {
+        agentStates[update.agent] = update
+      } else {
+        // Keep the one with higher iteration, or if same iteration, prefer 'complete' over 'thinking'
+        const existingIteration = existing.iteration || 0
+        const newIteration = update.iteration || 0
+        
+        if (newIteration > existingIteration) {
+          agentStates[update.agent] = update
+        } else if (newIteration === existingIteration) {
+          if (update.status === 'complete' && existing.status !== 'complete') {
+            agentStates[update.agent] = update
+          }
+        }
+      }
+    }
+  })
+  
+  // Sort agents by stage number
+  const sortedAgents = agents.map(agentKey => {
+    const state = agentStates[agentKey]
+    return {
+      key: agentKey,
+      stage: state?.stage || 999,
+      state
+    }
+  }).sort((a, b) => a.stage - b.stage)
+
+  return (
+    <div className="agent-view-container">
+      <h2 className="agent-view-title">Agent Activity - Step by Step</h2>
+      <div className="agents-grid">
+        {sortedAgents.map(({ key: agentKey, state }) => {
+          const config = agentConfig[agentKey as keyof typeof agentConfig]
+          const isThinking = state?.status === 'thinking'
+          const isComplete = state?.status === 'complete'
+          const isPending = !state || (state.status !== 'thinking' && state.status !== 'complete')
+
+          return (
+            <div
+              key={agentKey}
+              className={`agent-card ${isThinking ? 'thinking' : ''} ${isComplete ? 'complete' : ''} ${isPending ? 'pending' : ''}`}
+              style={{ '--agent-color': config.color } as React.CSSProperties}
+            >
+              <div className="agent-card-header">
+                <div className="agent-icon">{config.icon}</div>
+                <div className="agent-info">
+                  <h3>{config.name}</h3>
+                  <p>{config.description}</p>
+                </div>
+                <div className="agent-status">
+                  {isThinking && <div className="status-indicator thinking-indicator"></div>}
+                  {isComplete && <div className="status-indicator complete-indicator">✓</div>}
+                  {isPending && <div className="status-indicator pending-indicator"></div>}
+                </div>
+              </div>
+              
+              {isThinking && (
+                <div className="agent-message">
+                  <div className="thinking-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p><strong>Thinking:</strong> {state.message}</p>
+                </div>
+              )}
+              
+              {isComplete && state.response && (
+                <div className="agent-response">
+                  <div className="response-content">
+                    {(() => {
+                      // Extract only the text content, strip any object metadata
+                      let cleanText = String(state.response);
+                      
+                      // If response contains object structure, extract just the text field
+                      if (cleanText.includes('ResponseOutputText') || cleanText.includes("text='") || cleanText.includes('text="')) {
+                        // Try multiple regex patterns to extract text
+                        const patterns = [
+                          /text=['"](.*?)['"]/s,  // text='...' or text="..."
+                          /text=([^,}]+)/,        // text=...
+                          /'text':\s*['"](.*?)['"]/s,  // 'text': '...'
+                          /"text":\s*["'](.*?)["']/s   // "text": "..."
+                        ];
+                        
+                        for (const pattern of patterns) {
+                          const match = cleanText.match(pattern);
+                          if (match && match[1]) {
+                            cleanText = match[1]
+                              .replace(/\\n/g, '\n')  // Unescape newlines
+                              .replace(/\\'/g, "'")   // Unescape quotes
+                              .replace(/\\"/g, '"')   // Unescape quotes
+                              .trim();
+                            break;
+                          }
+                        }
+                      }
+                      
+                      // Process text with markdown formatting (like ChatGPT)
+                      const processText = (text: string) => {
+                        if (!text) return '';
+                        
+                        // Split by newlines and process each line
+                        const lines = text.split('\n');
+                        return lines.map((line, lineIdx) => {
+                          // Check for headers (## or ###)
+                          if (line.trim().startsWith('###')) {
+                            const headerText = line.replace(/^###+\s*/, '').trim();
+                            // Process bold in header
+                            const parts = headerText.split(/(\*\*.*?\*\*)/g);
+                            const processedParts = parts.map((part, partIdx) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+                              }
+                              return part;
+                            });
+                            return <h3 key={lineIdx} className="markdown-h3">{processedParts}</h3>;
+                          } else if (line.trim().startsWith('##')) {
+                            const headerText = line.replace(/^##+\s*/, '').trim();
+                            // Process bold in header
+                            const parts = headerText.split(/(\*\*.*?\*\*)/g);
+                            const processedParts = parts.map((part, partIdx) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+                              }
+                              return part;
+                            });
+                            return <h2 key={lineIdx} className="markdown-h2">{processedParts}</h2>;
+                          }
+                          
+                          // Process markdown bold (**text**)
+                          const parts = line.split(/(\*\*.*?\*\*)/g);
+                          const processedParts = parts.map((part, partIdx) => {
+                            if (part.startsWith('**') && part.endsWith('**')) {
+                              return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+                            }
+                            return part;
+                          });
+                          
+                          return (
+                            <span key={lineIdx}>
+                              {processedParts}
+                              {lineIdx < lines.length - 1 && <br />}
+                            </span>
+                          );
+                        });
+                      };
+                      
+                      return processText(cleanText);
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export default AgentView
+
