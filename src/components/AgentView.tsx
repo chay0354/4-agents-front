@@ -45,25 +45,25 @@ const agentConfig = {
 function AgentView({ updates }: AgentViewProps) {
   const agents = ['analysis', 'research', 'critic', 'monitor']
   
-  // Get the latest update for each agent (by iteration, then by status)
+  // Get the latest update for each agent - show results immediately as they arrive
   const agentStates: Record<string, AgentUpdate> = {}
   
+  // Process updates in order - latest status wins
   updates.forEach(update => {
     if (agents.includes(update.agent)) {
       const existing = agentStates[update.agent]
       if (!existing) {
         agentStates[update.agent] = update
       } else {
-        // Keep the one with higher iteration, or if same iteration, prefer 'complete' over 'thinking'
-        const existingIteration = existing.iteration || 0
-        const newIteration = update.iteration || 0
-        
-        if (newIteration > existingIteration) {
+        // Always prefer 'complete' status over 'thinking', or newer updates
+        if (update.status === 'complete') {
           agentStates[update.agent] = update
-        } else if (newIteration === existingIteration) {
-          if (update.status === 'complete' && existing.status !== 'complete') {
-            agentStates[update.agent] = update
-          }
+        } else if (existing.status !== 'complete' && update.status === 'thinking') {
+          agentStates[update.agent] = update
+        }
+        // If both are complete, keep the newer one (later in array)
+        else if (existing.status === 'complete' && update.status === 'complete') {
+          agentStates[update.agent] = update
         }
       }
     }

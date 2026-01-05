@@ -74,13 +74,21 @@ function App() {
               if (data.agent === 'system') {
                 continue
               }
+              
+              // Process update immediately - don't wait for all agents
+              console.log('Received SSE update:', data.agent, data.status)
+              // Update state immediately when each agent completes
               setAgentUpdates(prev => {
                 const existing = prev.findIndex(u => u.agent === data.agent && (u.stage === data.stage || (!u.stage && !data.stage)))
                 if (existing >= 0) {
                   const updated = [...prev]
                   updated[existing] = data
+                  // Log for debugging
+                  console.log(`Agent ${data.agent} updated:`, data.status, data.response ? `response length: ${data.response.length}` : 'no response')
                   return updated
                 }
+                // Log for debugging
+                console.log(`New agent update: ${data.agent}`, data.status)
                 return [...prev, data]
               })
 
