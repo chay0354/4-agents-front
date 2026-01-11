@@ -57,14 +57,14 @@ function AgentView({ updates }: AgentViewProps) {
       } else {
         // Always prefer 'complete' status over 'thinking', or newer updates
         if (update.status === 'complete') {
+          // If new update is complete, always use it (even if existing is also complete, use newer)
           agentStates[update.agent] = update
         } else if (existing.status !== 'complete' && update.status === 'thinking') {
+          // Only update if existing is not complete and new is thinking
           agentStates[update.agent] = update
         }
-        // If both are complete, keep the newer one (later in array)
-        else if (existing.status === 'complete' && update.status === 'complete') {
-          agentStates[update.agent] = update
-        }
+        // If both are complete, the first condition already handles it
+        // If existing is complete and update is not, keep existing (don't update)
       }
     }
   })
