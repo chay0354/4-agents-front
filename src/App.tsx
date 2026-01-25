@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ProblemInput from './components/ProblemInput'
 import AgentView from './components/AgentView'
 import FinalInsights from './components/FinalInsights'
+import KernelBubble from './components/KernelBubble'
 import './App.css'
 
 interface AgentUpdate {
@@ -19,6 +20,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleAnalyze = async (problem: string) => {
+    // Clear previous state and start fresh
+    setAgentUpdates([])
     setIsLoading(true)
     // Show immediate loading state for analysis agent
     setAgentUpdates([{
@@ -56,6 +59,7 @@ function App() {
       }
 
       let buffer = ''
+      let stopped = false
 
       while (true) {
         const { done, value } = await reader.read()
@@ -70,13 +74,26 @@ function App() {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6))
-              // Skip system messages, they're just for initialization
-              if (data.agent === 'system') {
+              
+              // Handle kernel stop - check system messages for stopped status
+              if (data.agent === 'system' && data.status === 'stopped') {
+                setIsLoading(false)
+                // Clear agent updates to allow fresh start
+                setAgentUpdates([])
+                stopped = true
+                // Show message but don't block - user can start new analysis
+                console.log('Analysis stopped:', data.message || 'Analysis stopped by kernel')
+                break // Exit the inner loop when stopped
+              }
+              
+              // Skip system messages that are just for initialization
+              if (data.agent === 'system' && data.status === 'starting') {
                 continue
               }
               
               // Process update immediately - don't wait for all agents
               console.log('Received SSE update:', data.agent, data.status)
+              
               // Update state immediately when each agent completes
               setAgentUpdates(prev => {
                 const existing = prev.findIndex(u => u.agent === data.agent && (u.stage === data.stage || (!u.stage && !data.stage)))
@@ -92,13 +109,24 @@ function App() {
                 return [...prev, data]
               })
 
+              // Keep loading state true as long as agents are processing
+              // Only set to false when analysis is completely done
               if (data.done) {
                 setIsLoading(false)
+              } else {
+                // Ensure loading stays true while any agent is working
+                // This includes when new agents start (thinking) or complete
+                setIsLoading(true)
               }
             } catch (e) {
               console.error('Error parsing SSE data:', e)
             }
           }
+        }
+        
+        // Break outer loop if stopped
+        if (stopped) {
+          break
         }
       }
     } catch (error) {
@@ -129,6 +157,8 @@ function App() {
           ) : null
         })()}
       </main>
+      
+      <KernelBubble isActive={isLoading} />
     </div>
   )
 }

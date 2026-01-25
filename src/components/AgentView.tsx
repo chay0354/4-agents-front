@@ -42,7 +42,7 @@ const agentConfig = {
   }
 }
 
-function AgentView({ updates }: AgentViewProps) {
+function AgentView({ updates, isActive }: AgentViewProps) {
   const agents = ['analysis', 'research', 'critic', 'monitor']
   
   // Get the latest update for each agent - show results immediately as they arrive
@@ -78,6 +78,12 @@ function AgentView({ updates }: AgentViewProps) {
       state
     }
   }).sort((a, b) => a.stage - b.stage)
+  
+  // Determine if any agent is currently thinking
+  const hasActiveAgent = sortedAgents.some(({ state }) => state?.status === 'thinking')
+  
+  // Determine if analysis is in progress (any agent has started or completed)
+  const hasStartedAnalysis = sortedAgents.some(({ state }) => state?.status === 'thinking' || state?.status === 'complete')
 
   return (
     <div className="agent-view-container">
@@ -88,11 +94,13 @@ function AgentView({ updates }: AgentViewProps) {
           const isThinking = state?.status === 'thinking'
           const isComplete = state?.status === 'complete'
           const isPending = !state || (state.status !== 'thinking' && state.status !== 'complete')
+          // Show queued animation if: pending, analysis is active, and analysis has started (even if no agent is currently thinking)
+          const isQueued = isPending && isActive && hasStartedAnalysis
 
           return (
             <div
               key={agentKey}
-              className={`agent-card ${isThinking ? 'thinking' : ''} ${isComplete ? 'complete' : ''} ${isPending ? 'pending' : ''}`}
+              className={`agent-card ${isThinking ? 'thinking' : ''} ${isComplete ? 'complete' : ''} ${isPending ? 'pending' : ''} ${isQueued ? 'queued' : ''}`}
               style={{ '--agent-color': config.color } as React.CSSProperties}
             >
               <div className="agent-card-header">
@@ -104,7 +112,8 @@ function AgentView({ updates }: AgentViewProps) {
                 <div className="agent-status">
                   {isThinking && <div className="status-indicator thinking-indicator"></div>}
                   {isComplete && <div className="status-indicator complete-indicator">✓</div>}
-                  {isPending && <div className="status-indicator pending-indicator"></div>}
+                  {isQueued && <div className="status-indicator queued-indicator"></div>}
+                  {isPending && !isQueued && <div className="status-indicator pending-indicator"></div>}
                 </div>
               </div>
               
@@ -116,6 +125,17 @@ function AgentView({ updates }: AgentViewProps) {
                     <span></span>
                   </div>
                   <p><strong>Thinking:</strong> {state.message}</p>
+                </div>
+              )}
+              
+              {isQueued && (
+                <div className="agent-message">
+                  <div className="queued-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p><strong>Waiting in queue...</strong> Will start after previous agent completes.</p>
                 </div>
               )}
               
