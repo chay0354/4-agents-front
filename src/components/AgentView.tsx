@@ -79,9 +79,6 @@ function AgentView({ updates, isActive }: AgentViewProps) {
     }
   }).sort((a, b) => a.stage - b.stage)
   
-  // Determine if any agent is currently thinking
-  const hasActiveAgent = sortedAgents.some(({ state }) => state?.status === 'thinking')
-  
   // Determine if analysis is in progress (any agent has started or completed)
   const hasStartedAnalysis = sortedAgents.some(({ state }) => state?.status === 'thinking' || state?.status === 'complete')
 
