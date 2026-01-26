@@ -87,8 +87,8 @@ function AgentView({ updates, isActive }: AgentViewProps) {
               response: update.response || existing.response // Preserve response if it exists
             }
             console.log(`  🎉 STATUS CHANGE: ${update.agent} changed from ${existing.status} to COMPLETE!`)
-          } else if (update.status === 'thinking' && existing.status !== 'complete') {
-            // Only update to thinking if not already complete
+          } else if (update.status === 'thinking') {
+            // Only update to thinking if not already complete (we know existing is not complete here)
             states[update.agent] = update
             console.log(`  🔄 UPDATE: ${update.agent} status=${update.status}`)
           } else {
