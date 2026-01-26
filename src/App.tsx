@@ -23,110 +23,143 @@ function App() {
     // Clear previous state and start fresh
     setAgentUpdates([])
     setIsLoading(true)
-    // Show immediate loading state for analysis agent
-    setAgentUpdates([{
-      agent: 'analysis',
-      stage: 1,
-      iteration: 1,
-      status: 'thinking',
-      message: 'Starting analysis...'
-    }])
 
     try {
       let backUrl = import.meta.env.VITE_BACK_URL || 'http://127.0.0.1:8000'
-      // Remove trailing slash if present to avoid double slashes
       backUrl = backUrl.replace(/\/+$/, '')
       
-      const response = await fetch(`${backUrl}/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          problem,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Analysis failed')
-      }
-
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-
-      if (!reader) {
-        throw new Error('No response body')
-      }
-
-      let buffer = ''
-      let stopped = false
-
-      while (true) {
-        const { done, value } = await reader.read()
+      const agents = [
+        { name: 'analysis', stage: 1, endpoint: '/agent/analysis' },
+        { name: 'research', stage: 2, endpoint: '/agent/research' },
+        { name: 'critic', stage: 3, endpoint: '/agent/critic' },
+        { name: 'monitor', stage: 4, endpoint: '/agent/monitor' },
+        { name: 'ratings', stage: 5, endpoint: '/agent/ratings' },
+        { name: 'summary', stage: 6, endpoint: '/agent/summary' }
+      ]
+      
+      const context: any = { problem }
+      const allResponses: any = {}
+      
+      for (const agent of agents) {
+        const timestamp = new Date().toLocaleTimeString()
+        const agentDisplayName = agent.name.charAt(0).toUpperCase() + agent.name.slice(1) + ' Agent'
         
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6))
-              
-              // Handle kernel stop - check system messages for stopped status
-              if (data.agent === 'system' && data.status === 'stopped') {
-                setIsLoading(false)
-                // Clear agent updates to allow fresh start
-                setAgentUpdates([])
-                stopped = true
-                // Show message but don't block - user can start new analysis
-                console.log('Analysis stopped:', data.message || 'Analysis stopped by kernel')
-                break // Exit the inner loop when stopped
+        // Show agent as thinking
+        console.log(`[${timestamp}] 🟢 FRONTEND: ${agentDisplayName} STARTING...`)
+        setAgentUpdates(prev => {
+          const existing = prev.findIndex(u => u.agent === agent.name)
+          if (existing >= 0) {
+            const updated = [...prev]
+            updated[existing] = { ...updated[existing], status: 'thinking' }
+            return updated
+          }
+          return [...prev, {
+            agent: agent.name,
+            stage: agent.stage,
+            status: 'thinking',
+            message: `${agentDisplayName} is processing...`
+          }]
+        })
+        
+        try {
+          // Call agent endpoint
+          const response = await fetch(`${backUrl}${agent.endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              problem,
+              context: { ...context, all_responses: allResponses }
+            })
+          })
+          
+          if (!response.ok) {
+            throw new Error(`Agent ${agent.name} failed: ${response.statusText}`)
+          }
+          
+          const result = await response.json()
+          
+          // Check if stopped by kernel
+          if (result.status === 'stopped') {
+            console.log(`[${timestamp}] 🛑 FRONTEND: ${agentDisplayName} STOPPED by kernel`)
+            setAgentUpdates(prev => {
+              const existing = prev.findIndex(u => u.agent === agent.name)
+              if (existing >= 0) {
+                const updated = [...prev]
+                updated[existing] = { ...updated[existing], status: 'error', message: result.message }
+                return updated
               }
-              
-              // Skip system messages that are just for initialization
-              if (data.agent === 'system' && data.status === 'starting') {
-                continue
-              }
-              
-              // Process update immediately - don't wait for all agents
-              console.log('Received SSE update:', data.agent, data.status)
-              
-              // Update state immediately when each agent completes
-              setAgentUpdates(prev => {
-                const existing = prev.findIndex(u => u.agent === data.agent && (u.stage === data.stage || (!u.stage && !data.stage)))
-                if (existing >= 0) {
-                  const updated = [...prev]
-                  updated[existing] = data
-                  // Log for debugging
-                  console.log(`Agent ${data.agent} updated:`, data.status, data.response ? `response length: ${data.response.length}` : 'no response')
-                  return updated
+              return [...prev, {
+                agent: agent.name,
+                stage: agent.stage,
+                status: 'error',
+                message: result.message
+              }]
+            })
+            setIsLoading(false)
+            return
+          }
+          
+          // Agent completed successfully
+          if (result.status === 'complete' && result.response) {
+            allResponses[agent.name] = result.response
+            context[agent.name] = result.response
+            
+            // For ratings agent, also add to context with proper key
+            if (agent.name === 'ratings') {
+              context['ratings'] = result.response
+            }
+            
+            // For summary, include all responses including ratings
+            if (agent.name === 'summary') {
+              context['all_responses'] = allResponses
+            }
+            
+            const endTimestamp = new Date().toLocaleTimeString()
+            console.log(`[${endTimestamp}] ✅ FRONTEND: ${agentDisplayName} FINISHED (response: ${result.response.length} chars)`)
+            
+            // Update state to show completed agent with response
+            setAgentUpdates(prev => {
+              const existing = prev.findIndex(u => u.agent === agent.name)
+              if (existing >= 0) {
+                const updated = [...prev]
+                updated[existing] = {
+                  ...updated[existing],
+                  status: 'complete',
+                  response: result.response
                 }
-                // Log for debugging
-                console.log(`New agent update: ${data.agent}`, data.status)
-                return [...prev, data]
-              })
-
-              // Keep loading state true as long as agents are processing
-              // Only set to false when analysis is completely done
-              if (data.done) {
-                setIsLoading(false)
-              } else {
-                // Ensure loading stays true while any agent is working
-                // This includes when new agents start (thinking) or complete
-                setIsLoading(true)
+                return updated
               }
-            } catch (e) {
-              console.error('Error parsing SSE data:', e)
+              return [...prev, {
+                agent: agent.name,
+                stage: agent.stage,
+                status: 'complete',
+                response: result.response
+              }]
+            })
+            
+            // If this is the summary, we're done
+            if (agent.name === 'summary') {
+              setIsLoading(false)
             }
           }
-        }
-        
-        // Break outer loop if stopped
-        if (stopped) {
-          break
+        } catch (error) {
+          console.error(`Error calling ${agent.name} agent:`, error)
+          setAgentUpdates(prev => {
+            const existing = prev.findIndex(u => u.agent === agent.name)
+            if (existing >= 0) {
+              const updated = [...prev]
+              updated[existing] = { ...updated[existing], status: 'error', message: String(error) }
+              return updated
+            }
+            return [...prev, {
+              agent: agent.name,
+              stage: agent.stage,
+              status: 'error',
+              message: String(error)
+            }]
+          })
+          setIsLoading(false)
+          return
         }
       }
     } catch (error) {

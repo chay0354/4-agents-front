@@ -54,13 +54,27 @@
   box-shadow: 0 0 10px var(--agent-color);
 }
 
+/* CRITICAL: Completed cards should NEVER show thinking animations */
 .agent-card.complete {
   border-color: var(--agent-color);
   background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(99, 102, 241, 0.05) 100%);
+  /* Remove any animations that might make it look like loading */
+  animation: none !important;
 }
 
 .agent-card.complete::before {
   background: var(--agent-color);
+  /* Remove any pulsing/loading animations */
+  animation: none !important;
+  box-shadow: none;
+}
+
+/* Ensure completed cards don't have thinking/queued classes applied */
+.agent-card.complete.thinking,
+.agent-card.complete.queued {
+  /* Override any thinking/queued styles */
+  box-shadow: none;
+  animation: none !important;
 }
 
 .agent-card.pending {
