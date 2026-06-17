@@ -698,3 +698,135 @@ footer {
   color: var(--text-2);
   letter-spacing: 0.04em;
 }
+
+/* === Mobile: match desktop vibrancy (iOS dims blur + gradient text) === */
+@media (max-width: 900px) {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--bg-0);
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+
+  /* Solid nav — backdrop-filter washes out colors on mobile Safari */
+  .nav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--bg-0);
+    border-bottom-color: var(--line-strong);
+  }
+
+  .hero-bg {
+    background:
+      radial-gradient(640px 420px at 85% 0%, rgba(212, 169, 73, 0.3), transparent 58%),
+      radial-gradient(520px 380px at 5% 95%, rgba(212, 169, 73, 0.16), transparent 58%);
+  }
+
+  .mascot-glow {
+    background: radial-gradient(circle, rgba(212, 169, 73, 0.48) 0%, transparent 62%);
+    filter: blur(32px);
+  }
+
+  .float-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: #2E2844;
+    border-color: rgba(212, 169, 73, 0.4);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .gold-text,
+  .step-num,
+  .cat-art .pi-tag .pi-symbol {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--gold-1);
+  }
+
+  .stat-num.gold-text {
+    color: var(--gold-1);
+  }
+
+  .cat-card::before {
+    opacity: 0.8;
+  }
+
+  .cat-card {
+    border-color: rgba(212, 169, 73, 0.12);
+    background: linear-gradient(180deg, #2C2644 0%, var(--bg-1) 100%);
+  }
+
+  .cat-art {
+    background: linear-gradient(180deg, #342E4C, #1E1A30);
+    border-color: rgba(212, 169, 73, 0.22);
+  }
+
+  .phone-stage::before {
+    background: radial-gradient(circle, rgba(212, 169, 73, 0.3), transparent 60%);
+  }
+
+  .phone {
+    border-color: rgba(212, 169, 73, 0.55);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 32px 64px -16px rgba(0, 0, 0, 0.75),
+      0 0 0 6px rgba(212, 169, 73, 0.1);
+  }
+
+  .testi-card,
+  .step,
+  .faq-item {
+    background: linear-gradient(180deg, #2C2644 0%, var(--bg-1) 100%);
+    border-color: rgba(212, 169, 73, 0.2);
+  }
+
+  .cta-band {
+    background:
+      radial-gradient(640px 320px at 50% -5%, rgba(212, 169, 73, 0.38), transparent 58%),
+      linear-gradient(180deg, #322A50 0%, #1A1628 100%);
+  }
+
+  .cta-band::after {
+    background: radial-gradient(circle at 50% 100%, rgba(212, 169, 73, 0.4), transparent 52%);
+  }
+
+  .store-badge {
+    background: rgba(42, 36, 64, 0.95);
+    border-color: var(--line-strong);
+  }
+
+  .marquee-wrap {
+    background: rgba(212, 169, 73, 0.04);
+  }
+
+  .marquee-row {
+    opacity: 1;
+  }
+
+  .marquee-row .partner {
+    color: var(--text-1);
+  }
+
+  .eyebrow {
+    background: rgba(212, 169, 73, 0.12);
+    border-color: var(--line-strong);
+    color: var(--gold-1);
+  }
+
+  .btn-primary {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 240, 200, 0.7),
+      inset 0 -1px 0 rgba(80, 50, 0, 0.4),
+      0 10px 28px -8px rgba(212, 169, 73, 0.65);
+  }
+
+  /* Show content at full opacity — no fade-in on small screens */
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
