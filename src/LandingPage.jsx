@@ -11,14 +11,6 @@ export default function LandingPage() {
   useEffect(() => {
     const cleanups = []
 
-    document.querySelectorAll('.faq-q').forEach((q) => {
-      const onClick = () => {
-        q.parentElement?.classList.toggle('open')
-      }
-      q.addEventListener('click', onClick)
-      cleanups.push(() => q.removeEventListener('click', onClick))
-    })
-
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -35,7 +27,7 @@ export default function LandingPage() {
 
     document
       .querySelectorAll(
-        '.block-head, .feat-text, .feat-row > .phone-stage, .step, .testi-card, .cat-card, .stats-grid > div',
+        '.block-head, .feat-text, .feat-row > .phone-stage, .step, .cat-card',
       )
       .forEach((el, i) => {
         el.classList.add('reveal')
