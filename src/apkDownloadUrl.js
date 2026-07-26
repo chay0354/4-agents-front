@@ -1,3 +1,3 @@
-/** pi-front-1.0.10-v24.apk — https://drive.google.com/file/d/1NcQ9yjLBLkq-ATIb_-4luD2vYpgPNLYL/view */
+/** pi-1.0.10-vc25.apk — https://drive.google.com/file/d/11wogIdgsIABWO7rNIP72y6omfj0vOSpY/view */
 export const APK_DOWNLOAD_URL =
-  'https://drive.google.com/uc?export=download&id=1NcQ9yjLBLkq-ATIb_-4luD2vYpgPNLYL'
+  'https://drive.google.com/uc?export=download&id=11wogIdgsIABWO7rNIP72y6omfj0vOSpY'
