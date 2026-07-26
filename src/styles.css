@@ -33,8 +33,14 @@
   --max-w: 1320px;
 }
 
+html {
+  color-scheme: dark only;
+  background-color: #16131F;
+}
+
 html, body {
   background: var(--bg-0);
+  background-color: #16131F;
   color: var(--text-1);
   font-family: 'Heebo', 'Assistant', -apple-system, system-ui, sans-serif;
   direction: rtl;
@@ -42,6 +48,12 @@ html, body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  min-height: 100%;
+}
+
+#root {
+  min-height: 100%;
+  background-color: #16131F;
 }
 
 img { max-width: 100%; display: block; }
@@ -153,9 +165,7 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: rgba(22, 19, 31, 0.72);
+  background: #16131F;
   border-bottom: 1px solid rgba(212, 169, 73, 0.12);
 }
 .nav-inner {
@@ -711,11 +721,9 @@ footer {
     -webkit-font-smoothing: subpixel-antialiased;
   }
 
-  /* Solid nav — backdrop-filter washes out colors on mobile Safari */
+  /* Solid nav — backdrop-filter washes out on mobile Safari/Android */
   .nav {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: var(--bg-0);
+    background: #16131F;
     border-bottom-color: var(--line-strong);
   }
 
@@ -841,7 +849,7 @@ footer {
 
 .legal-header {
   border-bottom: 1px solid var(--line);
-  background: var(--bg-0);
+  background: #16131F;
 }
 
 .legal-header-inner {

@@ -1,0 +1,10 @@
+{
+  "name": "פאי — הרשת החברתית של עולם הנדל״ן",
+  "short_name": "פאי",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16131F",
+  "theme_color": "#16131F",
+  "lang": "he",
+  "dir": "rtl"
+}

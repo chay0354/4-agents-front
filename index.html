@@ -1,16 +1,22 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" style="background-color:#16131F;color-scheme:dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark only" />
     <meta name="theme-color" content="#16131F" />
+    <meta name="theme-color" content="#16131F" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16131F" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="msapplication-navbutton-color" content="#16131F" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>פאי — הרשת החברתית של עולם הנדל״ן</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   </head>
-  <body>
+  <body style="background-color:#16131F">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
