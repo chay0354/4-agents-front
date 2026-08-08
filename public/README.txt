@@ -1,2 +1,2 @@
-APK: pi-preview-1.0.10-32.apk on Google Drive.
+APK: pi-1.0.10-v33.apk on Google Drive.
 Download URL is defined once in src/apkDownloadUrl.js.
